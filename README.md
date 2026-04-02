@@ -65,3 +65,81 @@ Leverage the Async.js library or mongo $lookup aggregation capability to join th
 - https://cloud.google.com/appengine/docs/flexible/nodejs/integrating-with-analytics
 - https://caolan.github.io/async/index.html
 - https://support.google.com/analytics/answer/2709829
+
+## Project Overview
+This API manages `Movie` documents and `Review` documents stored in MongoDB (via Mongoose).
+
+When you call `GET /movies/:id?reviews=true`, the API returns the movie plus all of its reviews using MongoDB `$lookup`.
+
+## Installation
+1. Install dependencies:
+   - `npm install`
+
+2. Create a `.env` file in the project root:
+   - `DB=<your MongoDB connection string>`
+   - `SECRET_KEY=<your JWT signing secret>`
+   - `GA_KEY=<your Google Analytics tracking/property ID>` (optional, extra credit)
+   - (optional) `UNIQUE_KEY=<if needed by your helpers>`
+
+## Run Locally
+- `node server.js` or `npm start`
+- Server listens on `PORT` if set, otherwise `8080`.
+
+## Seed sample data (movies + reviews + demo user)
+If you want quick sample data for testing (three movies, one review each, and a user you can sign in with):
+
+1. Ensure `.env` has a valid `DB` connection string.
+2. Run: `npm run seed`
+
+The script removes any previous seed rows that used the same movie titles, then inserts fresh data. It prints **movie `_id` values** (use them in `GET /movies/:id` and `POST /reviews`) and demo credentials:
+
+- **Username:** `demo_student@example.com`
+- **Password:** `DemoPass123`
+
+You can still use your own `POST /signup` user instead.
+
+## Deployment (Heroku or Render)
+
+Set the same environment variables on the host as in `.env` (never commit `.env`):
+
+| Variable | Required | Notes |
+|----------|----------|--------|
+| `DB` | Yes | MongoDB Atlas SRV URI; allow **Network Access** from the internet (`0.0.0.0/0` is typical for class projects). |
+| `SECRET_KEY` | Yes | Same idea as local; must match what you use to issue JWTs. |
+| `GA_KEY` | No | Google Analytics ID for extra credit analytics hits. |
+| `PORT` | Usually automatic | Heroku/Render inject this; you normally do **not** set it manually. |
+
+**Heroku**
+1. Install the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli), log in, and create an app.
+2. Connect your GitHub repo or deploy with `git push heroku main`.
+3. **Settings → Config Vars:** add `DB`, `SECRET_KEY`, and optionally `GA_KEY`.
+4. The included `Procfile` runs `web: node server.js`. Heroku also honors `npm start`.
+
+**Render**
+1. New **Web Service**, connect this repository.
+2. **Build command:** `npm install`  
+   **Start command:** `npm start` or `node server.js`
+3. **Environment** tab: add `DB`, `SECRET_KEY`, and optionally `GA_KEY`.
+4. Use the service **HTTPS URL** as your API base URL in Postman for submission.
+
+After deploy, run `npm run seed` **locally** (still pointed at the same Atlas cluster) if your data lives in that cluster—your hosted API will then see the same data. Alternatively, seed by calling your deployed `POST /signup`, `POST /movies`, and `POST /reviews` with a JWT.
+
+## Google Analytics (extra credit)
+Configure a GA property and custom dimension/metric per the assignment. Set `GA_KEY` in production so `POST /reviews` can send the measurement hit. Events can take time to appear in reports.
+
+## API Endpoints
+- `POST /signup`
+- `POST /signin`
+- `POST /movies` (JWT required)
+- `GET /movies` (JWT required)
+- `GET /movies/:id` (JWT required)
+  - Use `?reviews=true` to include reviews
+- `GET /reviews` (JWT required)
+  - Optional filter: `?movieId=<id>`
+- `POST /reviews` (JWT required)
+  - On success returns: `{ "message": "Review created!" }`
+- `DELETE /reviews/:id` (optional)
+
+## Postman Collection Link
+Embed/share URL (paste yours here):
+- `<paste your Postman collection URL here>`

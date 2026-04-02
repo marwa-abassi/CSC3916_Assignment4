@@ -1,12 +1,26 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-mongoose.connect(process.env.DB);
+// Connect to MongoDB (safe if DB env var isn't set yet).
+try {
+    if (process.env.DB && mongoose.connection.readyState === 0) {
+        mongoose.connect(process.env.DB, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true
+        }, () => console.log("connected"));
+    }
+} catch (error) {
+    console.log("could not connect");
+}
 
-// Movie schema
+// Review schema
 var ReviewSchema = new Schema({
-
+    movieId: { type: mongoose.Schema.Types.ObjectId, ref: 'Movie', required: true, index: true },
+    username: { type: String, required: true },
+    review: { type: String, required: true },
+    rating: { type: Number, required: true, min: 0, max: 5 }
 });
 
 // return the model
-module.exports = mongoose.model('Review', ReviewSchema);
+// Force the collection name to match the assignment rubric.
+module.exports = mongoose.model('Review', ReviewSchema, 'Reviews');
